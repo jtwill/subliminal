@@ -1,0 +1,4 @@
+BeautifulSoup python-beautifulsoup (>= 3.2.0)
+guessit python-guessit (>= 0.2)
+requests python-requests
+enzyme python-enzyme (>= 0.1)

@@ -1,0 +1,25 @@
+Source: subliminal
+Section: net
+Priority: extra
+Maintainer: Oxan van Leeuwen <oxan@oxanvanleeuwen.nl>
+Build-Depends: debhelper (>= 8.0.0), python-all (>= 2.6.6-3~), python-beautifulsoup (>= 3.2), python-guessit (>= 0.2), python-requests, python-enzyme (>= 0.1), python-setuptools
+Standards-Version: 3.9.3
+Homepage: http://subliminal.readthedocs.org/
+Vcs-Git: http://git.lan/packages/subliminal.git
+Vcs-Browser: http://git.lan/?p=packages/subliminal.git;a=summary
+X-Python-Version: >= 2.6
+
+Package: subliminal
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends}
+Description: search and download subtitles
+ It uses video hashes and the powerful guessit library that extracts information 
+ from filenames to ensure you have the best subtitles available. It also relies
+ on enzyme to detect embedded subtitles and avoid duplicates.
+ .
+ Subliminal supports multiple services to download the subtitles:
+  * OpenSubtitles
+  * TheSubDB
+  * BierDopje
+  * SubsWiki
+  * Subtitulos
