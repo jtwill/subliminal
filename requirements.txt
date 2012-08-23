@@ -1,4 +1,0 @@
-BeautifulSoup>=3.2.0
-guessit>=0.2
-requests
-enzyme>=0.1
