@@ -15,4 +15,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
-__version__ = '0.6.2'
+from . import test_language, test_services, test_subliminal, test_videos
+import unittest
+
+
+suite = unittest.TestSuite([test_language.suite(), test_services.suite(), test_subliminal.suite(), test_videos.suite()])
+
+
+if __name__ == '__main__':
+    unittest.TextTestRunner().run(suite)
