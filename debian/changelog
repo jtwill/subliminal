@@ -1,4 +1,4 @@
-subliminal (0.6.2-1) UNRELEASED; urgency=low
+subliminal (0.6.2-1) unstable; urgency=low
 
   * New upstream release
     + Tighten dependencies
@@ -6,7 +6,7 @@ subliminal (0.6.2-1) UNRELEASED; urgency=low
   * Use debhelper compat level 9
   * Bump Standards-Version to 3.9.4, no changes needed
 
- -- Oxan van Leeuwen <oxan@oxanvanleeuwen.nl>  Mon, 24 Dec 2012 17:16:10 +0100
+ -- Oxan van Leeuwen <oxan@oxanvanleeuwen.nl>  Mon, 24 Dec 2012 20:04:30 +0100
 
 subliminal (0.5.1-1) unstable; urgency=low
 
