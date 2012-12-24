@@ -5,7 +5,3 @@
 
 override_dh_installchangelogs:
 	dh_installchangelogs NEWS.rst
-
-override_dh_clean:
-	dh_clean
-	sed -i 's/Metadata-Version: 1.1/Metadata-Version: 1.0/' subliminal.egg-info/PKG-INFO

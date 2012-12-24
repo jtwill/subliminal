@@ -2,8 +2,8 @@ Source: subliminal
 Section: net
 Priority: extra
 Maintainer: Oxan van Leeuwen <oxan@oxanvanleeuwen.nl>
-Build-Depends: debhelper (>= 8.0.0), python-all (>= 2.6.6-3~), python-beautifulsoup (>= 3.2), python-guessit (>= 0.2), python-requests, python-enzyme (>= 0.1), python-setuptools
-Standards-Version: 3.9.3
+Build-Depends: debhelper (>= 8.0.0), python-all (>= 2.6.6-3~), python-bs4, python-guessit (>= 0.4.1), python-requests, python-enzyme (>= 0.1), python-setuptools, python-html5lib, python-lxml
+Standards-Version: 3.9.4
 Homepage: http://subliminal.readthedocs.org/
 Vcs-Git: http://git.lan/packages/subliminal.git
 Vcs-Browser: http://git.lan/?p=packages/subliminal.git;a=summary
@@ -18,8 +18,10 @@ Description: search and download subtitles
  on enzyme to detect embedded subtitles and avoid duplicates.
  .
  Subliminal supports multiple services to download the subtitles:
-  * OpenSubtitles
-  * TheSubDB
+  * Addic7ed
   * BierDopje
+  * OpenSubtitles
   * SubsWiki
   * Subtitulos
+  * TheSubDB
+  * TvSubtitles
