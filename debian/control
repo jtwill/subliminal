@@ -2,7 +2,7 @@ Source: subliminal
 Section: net
 Priority: extra
 Maintainer: Oxan van Leeuwen <oxan@oxanvanleeuwen.nl>
-Build-Depends: debhelper (>= 8.0.0), python-all (>= 2.6.6-3~), python-bs4, python-guessit (>= 0.4.1), python-requests, python-enzyme (>= 0.1), python-setuptools, python-html5lib, python-lxml
+Build-Depends: debhelper (>= 9), python-all (>= 2.6.6-3~), python-bs4, python-guessit (>= 0.4.1), python-requests, python-enzyme (>= 0.1), python-setuptools, python-html5lib, python-lxml
 Standards-Version: 3.9.4
 Homepage: http://subliminal.readthedocs.org/
 Vcs-Git: http://git.lan/packages/subliminal.git
