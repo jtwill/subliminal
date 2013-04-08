@@ -1,3 +1,4 @@
 BeautifulSoup python-bs4 (>= 4.0)
 guessit python-guessit (>= 0.4.1)
 enzyme python-enzyme (>= 0.1)
+requests python-requests (<< 1)
