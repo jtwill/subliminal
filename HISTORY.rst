@@ -1,11 +1,46 @@
-News
-====
+Changelog
+=========
 
-0.6.3
+0.7.2
 -----
-**release date:** 2013-01-17
+**release date:** 2013-11-10
 
-* Fix requirements due to requests 1.0
+* Fix TVSubtitles for ambiguous series
+* Add a CACHE_VERSION to force cache reloading on version change
+* Set CLI default cache expiration time to 30 days
+* Add podnapisi provider
+* Support script for languages e.g. Latn, Cyrl
+* Improve logging levels
+* Fix subtitle validation in some rare cases
+
+
+0.7.1
+-----
+**release date:** 2013-11-06
+
+* Improve CLI
+* Add login support for Addic7ed
+* Remove lxml dependency
+* Many fixes
+
+
+0.7.0
+-----
+**release date:** 2013-10-29
+
+**WARNING:** Complete rewrite of subliminal with backward incompatible changes
+
+* Use enzyme to parse metadata of videos
+* Use babelfish to handle languages
+* Use dogpile.cache for caching
+* Use charade to detect subtitle encoding
+* Use pysrt for subtitle validation
+* Use entry points for subtitle providers
+* New subtitle score computation
+* Hearing impaired subtitles support
+* Drop async support
+* Drop a few providers
+* And much more...
 
 0.6.2
 -----
