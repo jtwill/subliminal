@@ -2,10 +2,10 @@ Source: subliminal
 Section: net
 Priority: extra
 Maintainer: Oxan van Leeuwen <oxan@oxanvanleeuwen.nl>
-Build-Depends: debhelper (>= 9), python-all (>= 2.6.6-3~), python-setuptools
-               python-bs4, python-guessit (>= 0.6.2), python-requests, python-enzyme (>= 0.4.0),
-               python-html5lib, python-dogpile.cache, python-babelfish, python-charade,
-               python-pysrt
+Build-Depends: debhelper (>= 9), python-all (>= 2.6.6-3~), python-setuptools,
+               python-bs4 (>= 4.2), python-guessit (>= 0.6.2), python-requests (>= 2), python-enzyme (>= 0.4.0),
+               python-dogpile.cache (>= 0.5.0), python-babelfish (>= 0.3.0), python-charade (>= 1.0.3),
+               python-pysrt (>= 0.5.0)
 Standards-Version: 3.9.4
 Homepage: http://subliminal.readthedocs.org/
 Vcs-Git: http://git.lan/packages/subliminal.git
