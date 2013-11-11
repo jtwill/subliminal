@@ -5,3 +5,5 @@ debian/files
 debian/patches/
 debian/subliminal/
 build/
+.pybuild/
+subliminal.egg-info/
