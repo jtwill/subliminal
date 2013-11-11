@@ -1,6 +1,7 @@
 subliminal (0.7.2-1) UNRELEASED; urgency=low
 
   * New upstream release
+  * Switch to using pybuild
 
  -- Oxan van Leeuwen <oxan@oxanvanleeuwen.nl>  Sun, 10 Nov 2013 17:20:51 +0100
 

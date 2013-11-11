@@ -1,7 +1,11 @@
 #!/usr/bin/make -f
+export PYBUILD_NAME=subliminal
+# The tests require an internet connection, which isn't available while
+# building the Debian packages.
+export PYBUILD_DISABLE=test
 
 %:
-	dh $@ --with python2
+	dh $@ --with python2 --buildsystem=pybuild
 
 override_dh_installchangelogs:
-	dh_installchangelogs NEWS.rst
+	dh_installchangelogs HISTORY.rst
