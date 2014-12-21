@@ -91,8 +91,8 @@ class Episode(Video):
     :param int tvdb_id: TheTVDB id of the episode
 
     """
-    scores = {'format': 3, 'video_codec': 2, 'tvdb_id': 48, 'title': 12, 'imdb_id': 60, 'audio_codec': 1, 'year': 24,
-              'resolution': 2, 'season': 6, 'release_group': 6, 'series': 24, 'episode': 6, 'hash': 74}
+    scores = {'format': 4, 'video_codec': 2, 'tvdb_id': 40, 'title': 40, 'imdb_id': 80, 'audio_codec': 1, 'year': 20,
+              'resolution': 4, 'season': 20, 'release_group': 8, 'series': 20, 'episode': 20, 'hash': 79}
 
     def __init__(self, name, series, season, episode, format=None, release_group=None, resolution=None, video_codec=None,
                  audio_codec=None, imdb_id=None, hashes=None, size=None, subtitle_languages=None, title=None,

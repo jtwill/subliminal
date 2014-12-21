@@ -15,18 +15,18 @@ def get_episode_equations():
 
     The equations are the following:
 
-    1. hash = resolution + format + video_codec + audio_codec + series + season + episode + year + release_group
-    2. series = resolution + video_codec + audio_codec + season + episode + release_group + 1
+    1. hash = resolution + format + video_codec + audio_codec + release_group + series + year + season
+    2. series = resolution + video_codec + audio_codec +  release_group + format + 1
     3. year = series
     4. tvdb_id = series + year
-    5. season = resolution + video_codec + audio_codec + 1
+    5. season = series 
     6. imdb_id = series + season + episode + year
-    7. format = video_codec + audio_codec
-    8. resolution = video_codec
-    9. video_codec = 2 * audio_codec
+    7. format = 4 
+    8. resolution = 4 
+    9. video_codec = 2 
     10. title = season + episode
     11. season = episode
-    12. release_group = season
+    12. release_group = 8 
     13. audio_codec = 1
 
     :return: the score equations for an episode
@@ -34,18 +34,18 @@ def get_episode_equations():
 
     """
     equations = []
-    equations.append(Eq(hash, resolution + format + video_codec + audio_codec + series + season + episode + year + release_group))
-    equations.append(Eq(series, resolution + video_codec + audio_codec + season + episode + release_group + 1))
+    equations.append(Eq(hash, resolution + format + video_codec + audio_codec + release_group + series + year + season))
+    equations.append(Eq(series, resolution + video_codec + audio_codec + release_group + format + 1))
     equations.append(Eq(series, year))
     equations.append(Eq(tvdb_id, series + year))
-    equations.append(Eq(season, resolution + video_codec + audio_codec + 1))
+    equations.append(Eq(season, series))
     equations.append(Eq(imdb_id, series + season + episode + year))
-    equations.append(Eq(format, video_codec + audio_codec))
-    equations.append(Eq(resolution, video_codec))
-    equations.append(Eq(video_codec, 2 * audio_codec))
+    equations.append(Eq(format, 4))
+    equations.append(Eq(resolution, 4))
+    equations.append(Eq(video_codec, 2))
     equations.append(Eq(title, season + episode))
     equations.append(Eq(season, episode))
-    equations.append(Eq(release_group, season))
+    equations.append(Eq(release_group, 8))
     equations.append(Eq(audio_codec, 1))
     return equations
 
