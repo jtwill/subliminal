@@ -33,29 +33,29 @@ class Addic7edSubtitle(Subtitle):
     def compute_matches(self, video):
         matches = set()
         # series
-        if video.series and self.series == video.series:
+        if video.series is not None and self.series == video.series:
             matches.add('series')
         # season
-        if video.season and self.season == video.season:
+        if video.season is not None and self.season == video.season:
             matches.add('season')
         # episode
-        if video.episode and self.episode == video.episode:
+        if video.episode is not None and self.episode == video.episode:
             matches.add('episode')
         # title
-        if video.title and self.title.lower() == video.title.lower():
+        if video.title is not None and self.title.lower() == video.title.lower():
             matches.add('title')
         # year
         if self.year == video.year:
             matches.add('year')
         # release_group
-        if video.release_group and self.version and video.release_group.lower() in self.version.lower():
+        if video.release_group is not None and self.version is not None and video.release_group.lower() in self.version.lower():
             matches.add('release_group')
         """
         # resolution
-        if video.resolution and self.version and video.resolution in self.version.lower():
+        if video.resolution is not None and self.version is not None and video.resolution in self.version.lower():
             matches.add('resolution')
         # format
-        if video.format and self.version and video.format in self.version.lower:
+        if video.format is not None and self.version is not None and video.format in self.version.lower:
             matches.add('format')
         """
         # we don't have the complete filename, so we need to guess the matches separately

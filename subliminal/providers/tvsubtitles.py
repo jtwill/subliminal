@@ -35,30 +35,30 @@ class TVsubtitlesSubtitle(Subtitle):
     def compute_matches(self, video):
         matches = set()
         # series
-        if video.series and self.series == video.series:
+        if video.series is not None and self.series == video.series:
             matches.add('series')
         # season
-        if video.season and self.season == video.season:
+        if video.season is not None and self.season == video.season:
             matches.add('season')
         # episode
-        if video.episode and self.episode == video.episode:
+        if video.episode is not None and self.episode == video.episode:
             matches.add('episode')
         # year
         if self.year == video.year:
             matches.add('year')
         # release_group
-        if video.release_group and self.release and video.release_group.lower() in self.release.lower():
+        if video.release_group is not None and self.release is not None and video.release_group.lower() in self.release.lower():
             matches.add('release_group')
         """
         # video_codec
-        if video.video_codec and self.release and (video.video_codec in self.release.lower()
+        if video.video_codec is not None and self.release is not None and (video.video_codec in self.release.lower()
                                                    or video.video_codec == 'h264' and 'x264' in self.release.lower()):
             matches.add('video_codec')
         # resolution
-        if video.resolution and self.rip and video.resolution in self.rip.lower():
+        if video.resolution is not None and self.rip is not None and video.resolution in self.rip.lower():
             matches.add('resolution')
         # format
-        if video.format and self.rip and video.format in self.rip.lower():
+        if video.format is not None and self.rip is not None and video.format in self.rip.lower():
             matches.add('format')
         """
         # we don't have the complete filename, so we need to guess the matches separately

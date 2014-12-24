@@ -40,13 +40,13 @@ class PodnapisiSubtitle(Subtitle):
         # episode
         if isinstance(video, Episode):
             # series
-            if video.series and self.series.lower() == video.series.lower():
+            if video.series is not None and self.series.lower() == video.series.lower():
                 matches.add('series')
             # season
-            if video.season and self.season == video.season:
+            if video.season is not None and self.season == video.season:
                 matches.add('season')
             # episode
-            if video.episode and self.episode == video.episode:
+            if video.episode is not None and self.episode == video.episode:
                 matches.add('episode')
             # guess
             for release in self.releases:
@@ -54,7 +54,7 @@ class PodnapisiSubtitle(Subtitle):
         # movie
         elif isinstance(video, Movie):
             # title
-            if video.title and self.title.lower() == video.title.lower():
+            if video.title is not None and self.title.lower() == video.title.lower():
                 matches.add('title')
             # guess
             for release in self.releases:
@@ -98,15 +98,15 @@ class PodnapisiProvider(Provider):
 
     def query(self, language, series=None, season=None, episode=None, title=None, year=None):
         params = {'sXML': 1, 'sJ': language.podnapisi}
-        if series and season and episode:
+        if series is not None and season is not None and episode is not None:
             params['sK'] = series
             params['sTS'] = season
             params['sTE'] = episode
-        elif title:
+        elif title is not None:
             params['sK'] = title
         else:
             raise ValueError('Missing parameters series and season and episode or title')
-        if year:
+        if year is not None:
             params['sY'] = year
         logger.debug('Searching episode %r', params)
         subtitles = []
@@ -115,14 +115,14 @@ class PodnapisiProvider(Provider):
             if not int(root.find('pagination/results').text):
                 logger.debug('No subtitle found')
                 break
-            if series and season and episode:
+            if series is not None and season is not None and episode is not None:
                 subtitles.extend([PodnapisiSubtitle(language, int(s.find('id').text),
                                                     s.find('release').text.split() if s.find('release').text else [],
                                                     'n' in (s.find('flags').text or ''), s.find('url').text,
                                                     series=series, season=season, episode=episode,
                                                     year=s.find('year').text)
                                   for s in root.findall('subtitle')])
-            elif title:
+            elif title is not None:
                 subtitles.extend([PodnapisiSubtitle(language, int(s.find('id').text),
                                                     s.find('release').text.split() if s.find('release').text else [],
                                                     'n' in (s.find('flags').text or ''), s.find('url').text,
