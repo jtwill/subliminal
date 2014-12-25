@@ -148,6 +148,7 @@ class Subtitle(object):
         score += sum((video.scores[match] for match in matches))
         if hash_score > score:
             score = hash_score   # use highest score, either summed or just the hash
+            matches.add('hash')  # add hash back to the set since we used its match
 
         logger.info('Computed score %d ; initial matches %r ; final matches %r', score, initial_matches, matches)
         return score

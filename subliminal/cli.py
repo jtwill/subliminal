@@ -43,7 +43,7 @@ def subliminal():
                                  help='providers to use (%s)' % ', '.join(provider_manager.available_providers))
     filtering_group.add_argument('-m', '--min-score', type=int, default=0,
                                  help='minimum score for subtitles (0-%d for episodes, 0-%d for movies)'
-                                 % (Episode.scores['hash'], Movie.scores['hash']))
+                                 % (99, Movie.scores['hash']))
     filtering_group.add_argument('-a', '--age', help='download subtitles for videos newer than AGE e.g. 12h, 1w2d')
     filtering_group.add_argument('-h', '--hearing-impaired', action='store_true',
                                  help='download hearing impaired subtitles')
