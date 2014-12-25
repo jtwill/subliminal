@@ -176,6 +176,10 @@ def subliminal():
     # guess videos
     videos.extend([Video.fromname(p) for p in args.paths if not os.path.exists(p)])
 
+    # make default behavior to accept any subtitles, hearing_impaired or not
+    if args.hearing_impaired == False:  # this is the default from the command line with no option specified
+        args.hearing_impaired = None    # download_best_subtitles accepts None to download both types of subs
+
     # download best subtitles
     subtitles = download_best_subtitles(videos, args.languages, providers=args.providers,
                                         provider_configs=provider_configs, min_score=args.min_score,
