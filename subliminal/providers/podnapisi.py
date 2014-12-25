@@ -48,9 +48,15 @@ class PodnapisiSubtitle(Subtitle):
             # episode
             if video.episode is not None and self.episode == video.episode:
                 matches.add('episode')
+            # year, for episodes only match if both are not None since we are ORing with guess matches below
+            # thus if both are None here but the guess below has a year, we would not get an overall match
+            if video.year is not None and self.year is not None and self.year == video.year:
+                matches.add('year')  
             # guess
             for release in self.releases:
+                logger.debug('About to guess release %s  with matches %r', release, matches)
                 matches |= compute_guess_matches(video, guessit.guess_episode_info(release + '.mkv'))
+                logger.debug('Finished guessing with matches %r', matches)
         # movie
         elif isinstance(video, Movie):
             # title
@@ -59,9 +65,9 @@ class PodnapisiSubtitle(Subtitle):
             # guess
             for release in self.releases:
                 matches |= compute_guess_matches(video, guessit.guess_movie_info(release + '.mkv'))
-        # year
-        if self.year == video.year:
-            matches.add('year')
+            # year
+            if self.year == video.year:
+                matches.add('year')
         return matches
 
 
@@ -112,19 +118,32 @@ class PodnapisiProvider(Provider):
         subtitles = []
         while True:
             root = self.get('/search', params)
-            if not int(root.find('pagination/results').text):
-                logger.debug('No subtitle found')
+            if 0 == int(root.find('pagination/results').text):
+                logger.debug('No subtitles found')
                 break
             if series is not None and season is not None and episode is not None:
-                subtitles.extend([PodnapisiSubtitle(language, int(s.find('id').text),
-                                                    s.find('release').text.split() if s.find('release').text else [],
-                                                    'n' in (s.find('flags').text or ''), s.find('url').text,
-                                                    series=series, season=season, episode=episode,
-                                                    year=s.find('year').text)
-                                  for s in root.findall('subtitle')])
+                iii = 0
+                for sss in root.findall('subtitle'):
+                    iii += 1
+                    sub_release = sss.find('release').text
+                    sub_series = sss.find('title').text 
+                    sub_season = sss.find('tvSeason').text 
+                    sub_episode = sss.find('tvEpisode').text 
+                    sub_year = sss.find('year').text 
+                    logger.debug( 'subtitle %d : series %s ; year %s ; season %s ; episode %s ; release %s', 
+                                           iii, sub_series, sub_year, sub_season, sub_episode, sub_release )
+                    subtitles.append( PodnapisiSubtitle(language, 
+                                                        int(sss.find('id').text),
+                                                        sub_release.split() if sub_release is not None else [''],
+                                                        'n' in (sss.find('flags').text or ''), 
+                                                        sss.find('url').text,
+                                                        series=sub_series,
+                                                        season=int( sub_season ) if sub_season is not None else None,
+                                                        episode=int( sub_episode ) if sub_episode is not None else None,
+                                                        year=int( sub_year ) if sub_year is not None else None ) )
             elif title is not None:
                 subtitles.extend([PodnapisiSubtitle(language, int(s.find('id').text),
-                                                    s.find('release').text.split() if s.find('release').text else [],
+                                                    s.find('release').text.split() if s.find('release').text else [''],
                                                     'n' in (s.find('flags').text or ''), s.find('url').text,
                                                     title=title, year=s.find('year').text)
                                   for s in root.findall('subtitle')])
@@ -134,6 +153,7 @@ class PodnapisiProvider(Provider):
         return subtitles
 
     def list_subtitles(self, video, languages):
+        logger.info('Listing subtitles for video %r  languages %r', video, languages)
         if isinstance(video, Episode):
             return [s for l in languages for s in self.query(l, series=video.series, season=video.season,
                                                              episode=video.episode, year=video.year)]

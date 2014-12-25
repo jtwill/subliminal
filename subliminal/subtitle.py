@@ -114,7 +114,6 @@ class Subtitle(object):
         There are equivalent matches so that a provider can match one element or its equivalent. This is
         to give all provider a chance to have a score in the same range without hurting quality.
 
-        * Matching :class:`~subliminal.video.Video`'s `hashes` is equivalent to matching everything else
         * Matching :class:`~subliminal.video.Episode`'s `season` and `episode`
           is equivalent to matching :class:`~subliminal.video.Episode`'s `title`
         * Matching :class:`~subliminal.video.Episode`'s `tvdb_id` is equivalent to matching
@@ -130,21 +129,27 @@ class Subtitle(object):
         # compute matches
         initial_matches = self.compute_matches(video)
         matches = initial_matches.copy()
-        # hash is the perfect match
+        # score for hash match not summed, just use the hash score by itself 
         if 'hash' in matches:
-            score = video.scores['hash']
+            matches -= {'hash'}
+            hash_score = video.scores['hash']
         else:
-            # remove equivalences
-            if isinstance(video, Episode):
-                if 'imdb_id' in matches:
-                    matches -= {'series', 'tvdb_id', 'season', 'episode', 'title', 'year'}
-                if 'tvdb_id' in matches:
-                    matches -= {'series', 'year'}
-                if 'title' in matches:
-                    matches -= {'season', 'episode'}
-            # add other scores
-            score += sum((video.scores[match] for match in matches))
-        logger.info('Computed score %d with matches %r', score, initial_matches)
+            hash_score = 0
+
+        # remove equivalences
+        if isinstance(video, Episode):
+            if 'imdb_id' in matches:
+                matches -= {'series', 'tvdb_id', 'season', 'episode', 'title', 'year'}
+            if 'tvdb_id' in matches:
+                matches -= {'series', 'year'}
+            if 'title' in matches:
+                matches -= {'season', 'episode'}
+        # add other scores
+        score += sum((video.scores[match] for match in matches))
+        if hash_score > score:
+            score = hash_score   # use highest score, either summed or just the hash
+
+        logger.info('Computed score %d ; initial matches %r ; final matches %r', score, initial_matches, matches)
         return score
 
     def __repr__(self):
@@ -184,38 +189,40 @@ def compute_guess_matches(video, guess):
     matches = set()
     if isinstance(video, Episode):
         # series
-        if video.series and 'series' in guess and guess['series'].lower() == video.series.lower():
+        if video.series is not None and 'series' in guess and guess['series'].lower() == video.series.lower():
             matches.add('series')
         # season
-        if video.season and 'seasonNumber' in guess and guess['seasonNumber'] == video.season:
+        if video.season is not None and 'season' in guess and guess['season'] == video.season:
             matches.add('season')
         # episode
-        if video.episode and 'episodeNumber' in guess and guess['episodeNumber'] == video.episode:
+        if video.episode is not None and 'episodeNumber' in guess and guess['episodeNumber'] == video.episode:
             matches.add('episode')
         # year
-        if video.year == guess.get('year'):  # count "no year" as an information
+        if video.year is not None and 'year' in guess and guess['year'] == video.year:
+            matches.add('year')
+        elif video.year is None and 'year' not in guess:  # if both have no year, count it as a match
             matches.add('year')
     elif isinstance(video, Movie):
         # year
-        if video.year and 'year' in guess and guess['year'] == video.year:
+        if video.year is not None and 'year' in guess and guess['year'] == video.year:
             matches.add('year')
     # title
-    if video.title and 'title' in guess and guess['title'].lower() == video.title.lower():
+    if video.title is not None and 'title' in guess and guess['title'].lower() == video.title.lower():
         matches.add('title')
     # release group
-    if video.release_group and 'releaseGroup' in guess and guess['releaseGroup'].lower() == video.release_group.lower():
+    if video.release_group is not None and 'releaseGroup' in guess and guess['releaseGroup'].lower() == video.release_group.lower():
         matches.add('release_group')
     # screen size
-    if video.resolution and 'screenSize' in guess and guess['screenSize'] == video.resolution:
+    if video.resolution is not None and 'screenSize' in guess and guess['screenSize'] == video.resolution:
         matches.add('resolution')
     # format
-    if video.format and 'format' in guess and guess['format'].lower() == video.format.lower():
+    if video.format is not None and 'format' in guess and guess['format'].lower() == video.format.lower():
         matches.add('format')
     # video codec
-    if video.video_codec and 'videoCodec' in guess and guess['videoCodec'] == video.video_codec:
+    if video.video_codec is not None and 'videoCodec' in guess and guess['videoCodec'] == video.video_codec:
         matches.add('video_codec')
     # audio codec
-    if video.audio_codec and 'audioCodec' in guess and guess['audioCodec'] == video.audio_codec:
+    if video.audio_codec is not None and 'audioCodec' in guess and guess['audioCodec'] == video.audio_codec:
         matches.add('audio_codec')
     return matches
 
