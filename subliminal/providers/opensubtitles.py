@@ -17,7 +17,6 @@ from ..video import Episode, Movie
 
 logger = logging.getLogger(__name__)
 
-
 class OpenSubtitlesSubtitle(Subtitle):
     provider_name = 'opensubtitles'
     series_re = re.compile('^"(?P<series_name>.*)" (?P<series_title>.*)$')
@@ -48,24 +47,35 @@ class OpenSubtitlesSubtitle(Subtitle):
         matches = set()
         # episode
         if isinstance(video, Episode) and self.movie_kind == 'episode':
+            # title
+            if video.title is not None and hmg(video.title) == hmg(self.series_title) :
+                matches.add('title')
             # series
-            if video.series is not None and self.series_name.lower() == video.series.lower():
+            if video.series is not None and hmg(video.series) == hmg(self.series_name) :
                 matches.add('series')
             # season
-            if video.season is not None and self.series_season == video.season:
+            if video.season is not None and video.season == self.series_season :
                 matches.add('season')
             # episode
-            if video.episode is not None and self.series_episode == video.episode:
+            if video.episode is not None and video.episode == self.series_episode :
                 matches.add('episode')
+            # year  no use matching year since opensubtitles returns the episode airdate year 
             # guess
+            logger.debug('About to guess release %s  with matches %r', self.movie_release_name, matches)
             matches |= compute_guess_matches(video, guessit.guess_episode_info(self.movie_release_name + '.mkv'))
+            logger.debug('Finished guessing with matches %r', matches)
         # movie
         elif isinstance(video, Movie) and self.movie_kind == 'movie':
             # year
-            if video.year is not None and self.movie_year == video.year:
+            if video.year is not None and video.year == self.movie_year :
                 matches.add('year')
+            # title
+            if video.title is not None and hmg(video.title) == hmg(self.movie_name) :
+                matches.add('title')
             # guess
+            logger.debug('About to guess release %s  with matches %r', self.movie_release_name, matches)
             matches |= compute_guess_matches(video, guessit.guess_movie_info(self.movie_release_name + '.mkv'))
+            logger.debug('Finished guessing with matches %r', matches)
         else:
             logger.info('%r is not a valid movie_kind for %r', self.movie_kind, video)
             return matches
@@ -73,11 +83,8 @@ class OpenSubtitlesSubtitle(Subtitle):
         if 'opensubtitles' in video.hashes and self.hash == video.hashes['opensubtitles']:
             matches.add('hash')
         # imdb_id
-        if video.imdb_id is not None and self.movie_imdb_id == video.imdb_id:
+        if video.imdb_id is not None and video.imdb_id == self.movie_imdb_id :
             matches.add('imdb_id')
-        # title
-        if video.title is not None and self.movie_name.lower() == video.title.lower():
-            matches.add('title')
         return matches
 
 
@@ -116,15 +123,36 @@ class OpenSubtitlesProvider(Provider):
         logger.debug('Searching subtitles %r', searches)
         response = checked(self.server.SearchSubtitles(self.token, searches))
         if not response['data']:
-            logger.debug('No subtitle found')
+            logger.debug('No subtitles found')
             return []
-        return [OpenSubtitlesSubtitle(babelfish.Language.fromopensubtitles(r['SubLanguageID']),
-                                      bool(int(r['SubHearingImpaired'])), r['IDSubtitleFile'], r['MatchedBy'],
-                                      r['MovieKind'], r['MovieHash'], r['MovieName'], r['MovieReleaseName'],
-                                      int(r['MovieYear']) if r['MovieYear'] is not None else None, int(r['IDMovieImdb']),
-                                      int(r['SeriesSeason']) if r['SeriesSeason'] is not None else None,
-                                      int(r['SeriesEpisode']) if r['SeriesEpisode'] is not None else None, r['SubtitlesLink'])
-                for r in response['data']]
+        subtitles = []
+        iii = 0
+        for rsp in response['data']:
+            iii += 1
+            logger.debug( 'count %d : SubAddDate %s ; SubLanguageID %s ; SubHearingImpaired %s ; MatchedBy %s ; '
+                          'MovieKind %s ; MovieHash %s ; MovieName %s ; MovieReleaseName %s ; ' 
+                          'MovieYear %s ; MovieFPS %s ; IDMovieImdb  %s ; SeriesIMDBParent %s ; '
+                          'SeriesSeason %s ; SeriesEpisode %s',
+                          iii, rsp['SubAddDate'], rsp['SubLanguageID'], rsp['SubHearingImpaired'], rsp['MatchedBy'], 
+                          rsp['MovieKind'], rsp['MovieHash'], rsp['MovieName'], rsp['MovieReleaseName'], 
+                          rsp['MovieYear'], rsp['MovieFPS'], rsp['IDMovieImdb'], rsp['SeriesIMDBParent'], 
+                          rsp['SeriesSeason'], rsp['SeriesEpisode'] )
+
+            subtitles.append( OpenSubtitlesSubtitle( babelfish.Language.fromopensubtitles( rsp['SubLanguageID']),
+                                                     bool( int( rsp['SubHearingImpaired'] ) ), 
+                                                     rsp['IDSubtitleFile'], 
+                                                     rsp['MatchedBy'],
+                                                     rsp['MovieKind'], 
+                                                     rsp['MovieHash'], 
+                                                     rsp['MovieName'], 
+                                                     rsp['MovieReleaseName'],
+                                                     int( rsp['MovieYear']) if rsp['MovieYear'] is not None else None, 
+                                                     int( rsp['IDMovieImdb']) if rsp['IDMovieImdb'] is not None else None,
+                                                     int( rsp['SeriesSeason']) if rsp['SeriesSeason'] is not None else None,
+                                                     int( rsp['SeriesEpisode']) if rsp['SeriesEpisode'] is not None else None, 
+                                                     rsp['SubtitlesLink'] ) )
+
+        return subtitles
 
     def list_subtitles(self, video, languages):
         query = None
@@ -204,3 +232,8 @@ def checked(response):
     if status_code != 200:
         raise OpenSubtitlesError(response['status'])
     return response
+
+def hmg(str):
+    # homogenize str so that it has only [a-z0-9] chars
+    return re.sub( '[^a-z0-9]', '', re.sub( '&', 'and', str.lower() ) )
+
