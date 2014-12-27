@@ -23,11 +23,11 @@ def get_episode_equations():
     6. imdb_id = series + season + episode + year
     7. format = 4 
     8. resolution = 4 
-    9. video_codec = 2 
+    9. video_codec = 1 
     10. title = season + episode
     11. season = episode
     12. release_group = 8 
-    13. audio_codec = 1
+    13. audio_codec = 2
 
     :return: the score equations for an episode
     :rtype: list of :class:`sympy.Eq`
@@ -42,11 +42,11 @@ def get_episode_equations():
     equations.append(Eq(imdb_id, series + season + episode + year))
     equations.append(Eq(format, 4))
     equations.append(Eq(resolution, 4))
-    equations.append(Eq(video_codec, 2))
+    equations.append(Eq(video_codec, 1))
     equations.append(Eq(title, season + episode))
     equations.append(Eq(season, episode))
     equations.append(Eq(release_group, 8))
-    equations.append(Eq(audio_codec, 1))
+    equations.append(Eq(audio_codec, 2))
     return equations
 
 
