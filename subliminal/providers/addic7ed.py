@@ -64,6 +64,8 @@ class Addic7edSubtitle(Subtitle):
         matches |= compute_guess_properties_matches(video, self.version, 'screenSize')
         # guess format
         matches |= compute_guess_properties_matches(video, self.version, 'format')
+        # guess video codec
+        matches |= compute_guess_properties_matches(video, self.version, 'videoCodec')
         logger.debug("Finished guessing with version=%s, matches %r", self.version, matches)
         return matches
 
