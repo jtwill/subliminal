@@ -151,7 +151,8 @@ class Subtitle(object):
             score = hash_score   # use highest score, either summed or just the hash
             matches.add('hash')  # add hash back to the set since we used its match
 
-        logger.info('Computed score %d ; initial matches %r ; final matches %r', score, initial_matches, matches)
+        logger.info('Computed score %d; initial matches %r; final matches %r',
+                    score, initial_matches, matches)
         return score
 
     def __repr__(self):
@@ -191,7 +192,7 @@ def compute_guess_matches(video, guess):
     matches = set()
     if isinstance(video, Episode):
         # series
-        if video.series is not None and 'series' in guess and guess['series'].lower() == video.series.lower():
+        if video.series is not None and 'series' in guess and hmg(guess['series']) == hmg(video.series):
             matches.add('series')
         # season
         if video.season is not None and 'season' in guess and guess['season'] == video.season:
@@ -209,7 +210,7 @@ def compute_guess_matches(video, guess):
         if video.year is not None and 'year' in guess and guess['year'] == video.year:
             matches.add('year')
     # title
-    if video.title is not None and 'title' in guess and guess['title'].lower() == video.title.lower():
+    if video.title is not None and 'title' in guess and hmg(guess['title']) == hmg(video.title):
         matches.add('title')
     # release group
     if video.release_group is not None and 'releaseGroup' in guess and guess['releaseGroup'].lower() == video.release_group.lower():
