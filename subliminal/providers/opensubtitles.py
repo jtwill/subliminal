@@ -11,7 +11,7 @@ from . import Provider
 from .. import __version__
 from ..compat import ServerProxy, TimeoutTransport
 from ..exceptions import ProviderError, AuthenticationError, DownloadLimitExceeded
-from ..subtitle import Subtitle, fix_line_endings, compute_guess_matches
+from ..subtitle import Subtitle, fix_line_endings, compute_guess_matches, hmg
 from ..video import Episode, Movie
 
 
@@ -237,8 +237,4 @@ def checked(response):
     if status_code != 200:
         raise OpenSubtitlesError(response['status'])
     return response
-
-def hmg(str):
-    # homogenize str so that it has only [a-z0-9] chars
-    return re.sub( '[^a-z0-9]', '', re.sub( '&', 'and', str.lower() ) )
 

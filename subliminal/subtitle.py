@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 import logging
 import os.path
+import re
 import babelfish
 import chardet
 from guessit.plugins.transformers import get_transformer
@@ -292,3 +293,9 @@ def fix_line_endings(content):
 
     """
     return content.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+
+def hmg(str):
+    # homogenize str so that it has only [a-z0-9] chars
+    return re.sub( '[^a-z0-9]', '', re.sub( '&', 'and', str.lower() ) )
+
+
