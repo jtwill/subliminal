@@ -55,7 +55,7 @@ class OpenSubtitlesSubtitle(Subtitle):
         # Episode
         if isinstance(video, Episode) and self.movie_kind == 'episode':
             # series
-            if video.series is not None and video.series == self.series_name:
+            if video.series is not None and hmg(video.series) == hmg(self.series_name):
                 matches.add('series')
             # year: no use matching year since opensubtitles returns the episode airdate year 
             # season number
