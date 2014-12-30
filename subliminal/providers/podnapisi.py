@@ -109,7 +109,7 @@ class PodnapisiProvider(Provider):
     def query(self, language, series=None, season=None, episode=None, title=None, year=None):
         params = {'sXML': 1, 'sJ': language.podnapisi}
         if series is not None and season is not None and episode is not None:
-            params['sK'] = series
+            params['sK'] = rm_par(series)
             params['sTS'] = season
             params['sTE'] = episode
         elif title is not None:
@@ -123,12 +123,8 @@ class PodnapisiProvider(Provider):
         while True:
             root = self.get('/search', params)
             if 0 == int(root.find('pagination/results').text):
-                params['sK'] = rm_par(series).strip()
-                logger.debug('Re-Searching episode %r', params)
-                root = self.get('/search', params)
-                if 0 == int(root.find('pagination/results').text):
-                    logger.debug('No subtitles found')
-                    break
+                logger.debug('No subtitles found')
+                break
             if series is not None and season is not None and episode is not None:
                 iii = 0
                 for sss in root.findall('subtitle'):
