@@ -17,6 +17,7 @@ from ..video import Episode, Movie
 
 logger = logging.getLogger(__name__)
 
+
 class OpenSubtitlesSubtitle(Subtitle):
     provider_name = 'opensubtitles'
     series_re = re.compile('^"(?P<series_name>.*)" (?P<series_title>.*)$')
@@ -48,16 +49,16 @@ class OpenSubtitlesSubtitle(Subtitle):
         # episode
         if isinstance(video, Episode) and self.movie_kind == 'episode':
             # title
-            if video.title is not None and hmg(video.title) == hmg(self.series_title) :
+            if video.title is not None and hmg(video.title) == hmg(self.series_title):
                 matches.add('title')
             # series
-            if video.series is not None and hmg(video.series) == hmg(self.series_name) :
+            if video.series is not None and hmg(video.series) == hmg(self.series_name):
                 matches.add('series')
             # season
-            if video.season is not None and video.season == self.series_season :
+            if video.season is not None and video.season == self.series_season:
                 matches.add('season')
             # episode
-            if video.episode is not None and video.episode == self.series_episode :
+            if video.episode is not None and video.episode == self.series_episode:
                 matches.add('episode')
             # year  no use matching year since opensubtitles returns the episode airdate year 
             # guess
@@ -67,10 +68,10 @@ class OpenSubtitlesSubtitle(Subtitle):
         # movie
         elif isinstance(video, Movie) and self.movie_kind == 'movie':
             # year
-            if video.year is not None and video.year == self.movie_year :
+            if video.year is not None and video.year == self.movie_year:
                 matches.add('year')
             # title
-            if video.title is not None and hmg(video.title) == hmg(self.movie_name) :
+            if video.title is not None and hmg(video.title) == hmg(self.movie_name):
                 matches.add('title')
             # guess
             logger.debug('About to guess release %s  with matches %r', self.movie_release_name, matches)
@@ -83,7 +84,7 @@ class OpenSubtitlesSubtitle(Subtitle):
         if 'opensubtitles' in video.hashes and self.hash == video.hashes['opensubtitles']:
             matches.add('hash')
         # imdb_id
-        if video.imdb_id is not None and video.imdb_id == self.movie_imdb_id :
+        if video.imdb_id is not None and video.imdb_id == self.movie_imdb_id:
             matches.add('imdb_id')
         return matches
 
@@ -129,29 +130,33 @@ class OpenSubtitlesProvider(Provider):
         iii = 0
         for rsp in response['data']:
             iii += 1
-            logger.debug( 'count %d : SubAddDate %s ; SubLanguageID %s ; SubHearingImpaired %s ; MatchedBy %s ; '
-                          'MovieKind %s ; MovieHash %s ; MovieName %s ; MovieReleaseName %s ; ' 
-                          'MovieYear %s ; MovieFPS %s ; IDMovieImdb  %s ; SeriesIMDBParent %s ; '
-                          'SeriesSeason %s ; SeriesEpisode %s',
-                          iii, rsp['SubAddDate'], rsp['SubLanguageID'], rsp['SubHearingImpaired'], rsp['MatchedBy'], 
-                          rsp['MovieKind'], rsp['MovieHash'], rsp['MovieName'], rsp['MovieReleaseName'], 
-                          rsp['MovieYear'], rsp['MovieFPS'], rsp['IDMovieImdb'], rsp['SeriesIMDBParent'], 
-                          rsp['SeriesSeason'], rsp['SeriesEpisode'] )
-
-            subtitles.append( OpenSubtitlesSubtitle( babelfish.Language.fromopensubtitles( rsp['SubLanguageID']),
-                                                     bool( int( rsp['SubHearingImpaired'] ) ), 
-                                                     rsp['IDSubtitleFile'], 
-                                                     rsp['MatchedBy'],
-                                                     rsp['MovieKind'], 
-                                                     rsp['MovieHash'], 
-                                                     rsp['MovieName'], 
-                                                     rsp['MovieReleaseName'],
-                                                     int( rsp['MovieYear']) if rsp['MovieYear'] is not None else None, 
-                                                     int( rsp['IDMovieImdb']) if rsp['IDMovieImdb'] is not None else None,
-                                                     int( rsp['SeriesSeason']) if rsp['SeriesSeason'] is not None else None,
-                                                     int( rsp['SeriesEpisode']) if rsp['SeriesEpisode'] is not None else None, 
-                                                     rsp['SubtitlesLink'] ) )
-
+            logger.debug(
+                'count %d: SubAddDate %s; SubLanguageID %s; SubHearingImpaired %s; MatchedBy %s; '
+                'MovieKind %s; MovieHash %s; MovieName %s; MovieReleaseName %s; ' 
+                'MovieYear %s; MovieFPS %s; IDMovieImdb  %s; SeriesIMDBParent %s; '
+                'SeriesSeason %s; SeriesEpisode %s',
+                iii, rsp['SubAddDate'], rsp['SubLanguageID'], rsp['SubHearingImpaired'], rsp['MatchedBy'], 
+                rsp['MovieKind'], rsp['MovieHash'], rsp['MovieName'], rsp['MovieReleaseName'], 
+                rsp['MovieYear'], rsp['MovieFPS'], rsp['IDMovieImdb'], rsp['SeriesIMDBParent'], 
+                rsp['SeriesSeason'], rsp['SeriesEpisode'] 
+                )
+            subtitles.append( 
+                OpenSubtitlesSubtitle( 
+                    babelfish.Language.fromopensubtitles(rsp['SubLanguageID']),
+                    bool(int(rsp['SubHearingImpaired']) ), 
+                    rsp['IDSubtitleFile'], 
+                    rsp['MatchedBy'],
+                    rsp['MovieKind'], 
+                    rsp['MovieHash'], 
+                    rsp['MovieName'], 
+                    rsp['MovieReleaseName'],
+                    int(rsp['MovieYear']) if rsp['MovieYear'] is not None else None, 
+                    int(rsp['IDMovieImdb']) if rsp['IDMovieImdb'] is not None else None,
+                    int(rsp['SeriesSeason']) if rsp['SeriesSeason'] is not None else None,
+                    int(rsp['SeriesEpisode']) if rsp['SeriesEpisode'] is not None else None, 
+                    rsp['SubtitlesLink']
+                    ) 
+                )
         return subtitles
 
     def list_subtitles(self, video, languages):
