@@ -40,7 +40,7 @@ class PodnapisiSubtitle(Subtitle):
         # episode
         if isinstance(video, Episode):
             # series
-            if video.series is not None and self.series.lower() == video.series.lower():
+            if video.series is not None and hmg(video.series) == hmg(self.series):
                 matches.add('series')
             # season
             if video.season is not None and self.season == video.season:
@@ -64,7 +64,7 @@ class PodnapisiSubtitle(Subtitle):
         # movie
         elif isinstance(video, Movie):
             # title
-            if video.title is not None and self.title.lower() == video.title.lower():
+            if video.title is not None and hmg(video.title) == hmg(self.title):
                 matches.add('title')
             # guess
             for release in self.releases:
