@@ -46,46 +46,46 @@ class OpenSubtitlesSubtitle(Subtitle):
 
     def compute_matches(self, video):
         matches = set()
-        # episode
-        if isinstance(video, Episode) and self.movie_kind == 'episode':
-            # title
-            if video.title is not None and hmg(video.title) == hmg(self.series_title):
-                matches.add('title')
-            # series
-            if video.series is not None and hmg(video.series) == hmg(self.series_name):
-                matches.add('series')
-            # season
-            if video.season is not None and video.season == self.series_season:
-                matches.add('season')
-            # episode
-            if video.episode is not None and video.episode == self.series_episode:
-                matches.add('episode')
-            # year  no use matching year since opensubtitles returns the episode airdate year 
-            # guess
-            logger.debug('About to guess release %s  with matches %r', self.movie_release_name, matches)
-            matches |= compute_guess_matches(video, guessit.guess_episode_info(self.movie_release_name + '.mkv'))
-            logger.debug('Finished guessing with matches %r', matches)
-        # movie
-        elif isinstance(video, Movie) and self.movie_kind == 'movie':
-            # year
-            if video.year is not None and video.year == self.movie_year:
-                matches.add('year')
-            # title
-            if video.title is not None and hmg(video.title) == hmg(self.movie_name):
-                matches.add('title')
-            # guess
-            logger.debug('About to guess release %s  with matches %r', self.movie_release_name, matches)
-            matches |= compute_guess_matches(video, guessit.guess_movie_info(self.movie_release_name + '.mkv'))
-            logger.debug('Finished guessing with matches %r', matches)
-        else:
-            logger.info('%r is not a valid movie_kind for %r', self.movie_kind, video)
-            return matches
         # hash
         if 'opensubtitles' in video.hashes and self.hash == video.hashes['opensubtitles']:
             matches.add('hash')
         # imdb_id
         if video.imdb_id is not None and video.imdb_id == self.movie_imdb_id:
             matches.add('imdb_id')
+        # Episode
+        if isinstance(video, Episode) and self.movie_kind == 'episode':
+            # series
+            if video.series is not None and video.series == self.series_name:
+                matches.add('series')
+            # year: no use matching year since opensubtitles returns the episode airdate year 
+            # season number
+            if video.season is not None and video.season == self.series_season:
+                matches.add('season')
+            # episode number
+            if video.episode is not None and video.episode == self.series_episode:
+                matches.add('episode')
+            # title
+            if video.title is not None and hmg(video.title) == hmg(self.series_title):
+                matches.add('title')
+            # guess
+            logger.debug('About to guess release %s; with matches %r', self.movie_release_name, matches)
+            matches |= compute_guess_matches(video, guessit.guess_episode_info(self.movie_release_name + '.mkv'))
+            logger.debug('Finished guessing release %s; with matches %r', self.movie_release_name, matches)
+        # Movie
+        elif isinstance(video, Movie) and self.movie_kind == 'movie':
+            # title
+            if video.title is not None and hmg(video.title) == hmg(self.movie_name):
+                matches.add('title')
+            # year
+            if video.year is not None and video.year == self.movie_year:
+                matches.add('year')
+            # guess
+            logger.debug('About to guess release %s; with matches %r', self.movie_release_name, matches)
+            matches |= compute_guess_matches(video, guessit.guess_movie_info(self.movie_release_name + '.mkv'))
+            logger.debug('Finished guessing release %s; with matches %r', self.movie_release_name, matches)
+        else:
+            logger.info('%r is not a valid movie_kind for %r', self.movie_kind, video)
+            return matches
         return matches
 
 
@@ -131,7 +131,7 @@ class OpenSubtitlesProvider(Provider):
         for rsp in response['data']:
             iii += 1
             logger.debug(
-                'count %d: SubAddDate %s; SubLanguageID %s; SubHearingImpaired %s; MatchedBy %s; '
+                'opensubtitles #%d: SubAddDate %s; SubLanguageID %s; SubHearingImpaired %s; MatchedBy %s; '
                 'MovieKind %s; MovieHash %s; MovieName %s; MovieReleaseName %s; ' 
                 'MovieYear %s; MovieFPS %s; IDMovieImdb  %s; SeriesIMDBParent %s; '
                 'SeriesSeason %s; SeriesEpisode %s',
