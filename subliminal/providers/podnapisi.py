@@ -12,7 +12,7 @@ import requests
 from . import Provider
 from .. import __version__
 from ..exceptions import ProviderError
-from ..subtitle import Subtitle, fix_line_endings, compute_guess_matches
+from ..subtitle import Subtitle, fix_line_endings, compute_guess_matches, hmg, rm_par
 from ..video import Episode, Movie
 
 
@@ -119,8 +119,12 @@ class PodnapisiProvider(Provider):
         while True:
             root = self.get('/search', params)
             if 0 == int(root.find('pagination/results').text):
-                logger.debug('No subtitles found')
-                break
+                params['sK'] = rm_par(series).strip()
+                logger.debug('Re-Searching episode %r', params)
+                root = self.get('/search', params)
+                if 0 == int(root.find('pagination/results').text):
+                    logger.debug('No subtitles found')
+                    break
             if series is not None and season is not None and episode is not None:
                 iii = 0
                 for sss in root.findall('subtitle'):

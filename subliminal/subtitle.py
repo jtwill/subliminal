@@ -294,8 +294,12 @@ def fix_line_endings(content):
     """
     return content.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
 
+def rm_par(str):
+    """Remove (parentheticals) from string"""
+    return re.sub('\([^)]*\)', '', str).strip()
+
 def hmg(str):
-    # homogenize str so that it has only [a-z0-9] chars
+    """homogenize str so that it has only [a-z0-9] chars"""
     return re.sub( '[^a-z0-9]', '', re.sub( '&', 'and', str.lower() ) )
 
 
