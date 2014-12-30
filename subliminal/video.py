@@ -112,6 +112,7 @@ class Episode(Video):
             raise ValueError('The guess must be an episode guess')
         if 'series' not in guess or 'season' not in guess or 'episodeNumber' not in guess:
             raise ValueError('Insufficient data to process the guess')
+        logger.debug('Episode: guessit returned %r', guess) 
         return cls(name, guess['series'], guess['season'], guess['episodeNumber'], format=guess.get('format'),
                    release_group=guess.get('releaseGroup'), resolution=guess.get('screenSize'),
                    video_codec=guess.get('videoCodec'), audio_codec=guess.get('audioCodec'),
@@ -152,6 +153,7 @@ class Movie(Video):
             raise ValueError('The guess must be a movie guess')
         if 'title' not in guess:
             raise ValueError('Insufficient data to process the guess')
+        logger.debug('Movie: guessit returned %r', guess) 
         return cls(name, guess['title'], format=guess.get('format'), release_group=guess.get('releaseGroup'),
                    resolution=guess.get('screenSize'), video_codec=guess.get('videoCodec'),
                    audio_codec=guess.get('audioCodec'),year=guess.get('year'))
@@ -277,6 +279,24 @@ def scan_video(path, subtitles=True, embedded_subtitles=True):
                 logger.debug('MKV has no subtitle track')
     except enzyme.Error:
         logger.exception('Parsing video metadata with enzyme failed')
+    if isinstance(video, Episode):
+        logger.debug('video Episode: name=%s; title=%s; year=%s; '
+            'series=%s; season=%s; episode=%s; tvdb_id=%s; '
+            'format=%s; release_group=%s; resolution=%s; video_codec=%s; audio_codec=%s; '
+            'imdb_id=%s; size=%s; subtitle_languages=%r; hashes=%r',
+            video.name, video.title, video.year,
+            video.series, video.season, video.episode, video.tvdb_id,
+            video.format, video.release_group, video.resolution, video.video_codec, video.audio_codec,
+            video.imdb_id, video.size, video.subtitle_languages, video.hashes
+            )
+    elif isinstance(video, Movie):
+        logger.debug('video Movie: name=%s; title=%s; year=%s; '
+            'format=%s; release_group=%s; resolution=%s; video_codec=%s; audio_codec=%s; '
+            'imdb_id=%s; size=%s; subtitle_languages=%r; hashes=%r',
+            video.name, video.title, video.year,
+            video.format, video.release_group, video.resolution, video.video_codec, video.audio_codec,
+            video.imdb_id, video.size, video.subtitle_languages, video.hashes
+            )
     return video
 
 
@@ -293,6 +313,7 @@ def scan_videos(paths, subtitles=True, embedded_subtitles=True, age=None):
     :rtype: list of :class:`Video`
 
     """
+    logger.debug('Scanning video paths %r', paths)
     videos = []
     # scan files
     for filepath in [p for p in paths if os.path.isfile(p)]:
