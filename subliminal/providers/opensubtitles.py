@@ -11,7 +11,7 @@ from . import Provider
 from .. import __version__
 from ..compat import ServerProxy, TimeoutTransport
 from ..exceptions import ProviderError, AuthenticationError, DownloadLimitExceeded
-from ..subtitle import Subtitle, fix_line_endings, compute_guess_matches, hmg
+from ..subtitle import Subtitle, fix_line_endings, compute_guess_matches, hmg, rm_par
 from ..video import Episode, Movie
 
 
@@ -114,7 +114,7 @@ class OpenSubtitlesProvider(Provider):
         if imdb_id is not None:
             searches.append({'imdbid': imdb_id})
         if query is not None and season is not None and episode is not None:
-            searches.append({'query': query, 'season': season, 'episode': episode})
+            searches.append({'query': rm_par(query), 'season': season, 'episode': episode})
         elif query is not None:
             searches.append({'query': query})
         if not searches:
@@ -165,6 +165,8 @@ class OpenSubtitlesProvider(Provider):
         episode = None
         if ('opensubtitles' not in video.hashes or not video.size) and not video.imdb_id:
             query = video.name.split(os.sep)[-1]
+        if isinstance(video, Movie):
+            query = video.title
         if isinstance(video, Episode):
             query = video.series
             season = video.season
