@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import logging
+import re
 import babelfish
 import bs4
 import requests
@@ -8,9 +9,8 @@ from . import Provider
 from .. import __version__
 from ..cache import region, SHOW_EXPIRATION_TIME
 from ..exceptions import ConfigurationError, AuthenticationError, DownloadLimitExceeded, ProviderError
-from ..subtitle import Subtitle, fix_line_endings, compute_guess_properties_matches
+from ..subtitle import Subtitle, fix_line_endings, compute_guess_properties_matches, hmg, rm_par
 from ..video import Episode
-import re
 
 logger = logging.getLogger(__name__)
 babelfish.language_converters.register('addic7ed = subliminal.converters.addic7ed:Addic7edConverter')
@@ -33,7 +33,7 @@ class Addic7edSubtitle(Subtitle):
     def compute_matches(self, video):
         matches = set()
         # series
-        if video.series is not None and self.series == video.series:
+        if video.series is not None and hmg(video.series) == hmg(self.series):
             matches.add('series')
         # season
         if video.season is not None and self.season == video.season:
@@ -42,7 +42,7 @@ class Addic7edSubtitle(Subtitle):
         if video.episode is not None and self.episode == video.episode:
             matches.add('episode')
         # title
-        if video.title is not None and self.title.lower() == video.title.lower():
+        if video.title is not None and hmg(video.title) == hmg(self.title):
             matches.add('title')
         # year
         if self.year == video.year:
@@ -50,14 +50,12 @@ class Addic7edSubtitle(Subtitle):
         # release_group
         if video.release_group is not None and self.version is not None and video.release_group.lower() in self.version.lower():
             matches.add('release_group')
-        """
         # resolution
-        if video.resolution is not None and self.version is not None and video.resolution in self.version.lower():
+        if video.resolution is not None and self.version is not None and video.resolution.lower() in self.version.lower():
             matches.add('resolution')
         # format
-        if video.format is not None and self.version is not None and video.format in self.version.lower:
+        if video.format is not None and self.version is not None and video.format.lower() in self.version.lower():
             matches.add('format')
-        """
         # we don't have the complete filename, so we need to guess the matches separately
         # guess resolution (screenSize in guessit)
         matches |= compute_guess_properties_matches(video, self.version, 'screenSize')
@@ -76,12 +74,12 @@ class Addic7edProvider(Provider):
     server = 'http://www.addic7ed.com'
     
     replaces = [
-        ['[?\':]+', ''],  # Remove ?': characters
+        ["[?':]+", ''],   # Remove ?': characters
         ['[&]+', 'and']]  # Replace & with and
 
     def __init__(self, username=None, password=None):
         if username is not None and password is None or username is None and password is not None:
-            raise ConfigurationError('Username and password must be specified')
+            raise ConfigurationError('Both username and password must be specified, or both None')
         self.username = username
         self.password = password
         self.logged_in = False
@@ -89,7 +87,7 @@ class Addic7edProvider(Provider):
     def initialize(self):
         self.session = requests.Session()
         self.session.headers = {'User-Agent': 'Subliminal/%s' % __version__.split('-')[0]}
-        # login
+        # login, unless username and password are both None
         if self.username is not None and self.password is not None:
             logger.debug('Logging in')
             data = {'username': self.username, 'password': self.password, 'Submit': 'Log in'}
@@ -164,27 +162,32 @@ class Addic7edProvider(Provider):
         if not suggested_shows:
             logger.info('Series %r not found', series_year)
             return None
+        logger.debug('suggested_shows: %r', suggested_shows[0]['href'][6:]) 
         return int(suggested_shows[0]['href'][6:])
 
     def query(self, series, season, year=None):
         show_ids = self.get_show_ids()
+        logger.debug('Addic7ed show list length=%d', len(show_ids)) 
         show_id = None
+        series_fix = rm_par(series.lower())
         if year is not None:  # search with the year
-            series_year = '%s (%d)' % (series.lower(), year)
+            series_year = '%s (%d)' % (series_fix, year)
             if series_year in show_ids:
                 show_id = show_ids[series_year]
             else:
-                show_id = self.find_show_id(series.lower(), year)
+                show_id = self.find_show_id(series_fix, year)
+            series_searched = series_year
         if show_id is None:  # search without the year
             year = None
-            if series.lower() in show_ids:
-                show_id = show_ids[series.lower()]
+            if series_fix in show_ids:
+                show_id = show_ids[series_fix]
             else:
-                show_id = self.find_show_id(series.lower())
+                show_id = self.find_show_id(series_fix)
+            series_searched = series_fix
         if show_id is None:
             return []
         params = {'show_id': show_id, 'season': season}
-        logger.debug('Searching subtitles %r', params)
+        logger.debug('Searching subtitles for "%s" with %r', series_searched, params)
         link = '/show/{show_id}&season={season}'.format(**params)
         soup = self.get(link)
         subtitles = []
@@ -194,10 +197,18 @@ class Addic7edProvider(Provider):
                 continue
             if not cells[3].string:
                 continue
-            subtitles.append(Addic7edSubtitle(babelfish.Language.fromaddic7ed(cells[3].string), series, season,
-                                              int(cells[1].string), cells[2].string, year, cells[4].string,
-                                              bool(cells[6].string), cells[9].a['href'],
-                                              self.server + cells[2].a['href']))
+            subtitles.append(Addic7edSubtitle(
+                babelfish.Language.fromaddic7ed(cells[3].string),  # language
+                series_searched,        # series
+                int(cells[0].string),   # season
+                int(cells[1].string),   # episode
+                cells[2].string,        # title
+                year,                   # year
+                cells[4].string,        # version
+                bool(cells[6].string),  # hearing_impaired
+                cells[9].a['href'],     # download_link
+                self.server + cells[2].a['href'] )  # page link
+                )
         return subtitles
 
     def list_subtitles(self, video, languages):
