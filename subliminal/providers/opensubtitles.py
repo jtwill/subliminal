@@ -160,6 +160,7 @@ class OpenSubtitlesProvider(Provider):
         return subtitles
 
     def list_subtitles(self, video, languages):
+        logger.debug('Listing subtitles for video %r; languages %r', video, languages)
         query = None
         season = None
         episode = None
