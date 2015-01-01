@@ -58,9 +58,11 @@ class Addic7edSubtitle(Subtitle):
             matches.add('format')
         # we don't have the complete filename, so we need to guess the matches separately
         # guess resolution (screenSize in guessit)
+        logger.debug("About to guess with version=%s, matches %r", self.version, matches)
         matches |= compute_guess_properties_matches(video, self.version, 'screenSize')
         # guess format
         matches |= compute_guess_properties_matches(video, self.version, 'format')
+        logger.debug("Finished guessing with version=%s, matches %r", self.version, matches)
         return matches
 
 
@@ -194,9 +196,9 @@ class Addic7edProvider(Provider):
         for row in soup('tr', class_='epeven completed'):
             cells = row('td')
             if cells[5].string != 'Completed':
-                continue
+                continue    # skip if subtitle file is not completed
             if not cells[3].string:
-                continue
+                continue    # skip if no language
             subtitles.append(Addic7edSubtitle(
                 babelfish.Language.fromaddic7ed(cells[3].string),  # language
                 series_searched,        # series
@@ -212,6 +214,7 @@ class Addic7edProvider(Provider):
         return subtitles
 
     def list_subtitles(self, video, languages):
+        logger.debug('Listing subtitles for video %r; languages %r', video, languages)
         return [s for s in self.query(video.series, video.season, video.year)
                 if s.language in languages and s.episode == video.episode]
 
