@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 import logging
 import re
+import unicodedata
 import babelfish
 import bs4
 import requests
@@ -11,6 +12,7 @@ from ..cache import region, SHOW_EXPIRATION_TIME
 from ..exceptions import ConfigurationError, AuthenticationError, DownloadLimitExceeded, ProviderError
 from ..subtitle import Subtitle, fix_line_endings, compute_guess_properties_matches, hmg, rm_par
 from ..video import Episode
+
 
 logger = logging.getLogger(__name__)
 babelfish.language_converters.register('addic7ed = subliminal.converters.addic7ed:Addic7edConverter')
@@ -75,10 +77,6 @@ class Addic7edProvider(Provider):
     video_types = (Episode,)
     server = 'http://www.addic7ed.com'
     
-    replaces = [
-        ["[?':]+", ''],   # Remove ?': characters
-        ['[&]+', 'and']]  # Replace & with and
-
     def __init__(self, username=None, password=None):
         if username is not None and password is None or username is None and password is not None:
             raise ConfigurationError('Both username and password must be specified, or both None')
@@ -133,13 +131,14 @@ class Addic7edProvider(Provider):
         """
         soup = self.get('/shows.php')
         show_ids = {}
+        iii = 0
         for html_show in soup.select('td.version > h3 > a[href^="/show/"]'):
-            lower_show = html_show.string.lower()
+            iii += 1
+            show_str = html_show.string
             show_code = int(html_show['href'][6:])
-            show_ids[lower_show] = show_code
-            for search, replace in self.replaces:
-                lower_show = re.sub(search, replace, lower_show)
-            show_ids[lower_show] = show_code    
+            show_ids[show_str.lower()] = show_code 
+            show_ids[clean_series(show_str)] = show_code
+        logger.info('Addic7ed show list length = %d', iii)
         return show_ids
 
     @region.cache_on_arguments(expiration_time=SHOW_EXPIRATION_TIME)
@@ -164,59 +163,114 @@ class Addic7edProvider(Provider):
         if not suggested_shows:
             logger.info('Series %r not found', series_year)
             return None
-        logger.debug('suggested_shows: %r', suggested_shows[0]['href'][6:]) 
+        suggested_list = [ss['href'][6:] for ss in suggested_shows]
+        logger.debug('suggested_shows length = %d; %r', len(suggested_list), suggested_list)
         return int(suggested_shows[0]['href'][6:])
 
-    def query(self, series, season, year=None):
+    def query(self, languages, series, season, episode, year=None):
         show_ids = self.get_show_ids()
-        logger.debug('Addic7ed show list length=%d', len(show_ids)) 
+        logger.info('Addic7ed augmented show list length = %d', len(show_ids)) 
         show_id = None
-        series_fix = rm_par(series.lower())
         if year is not None:  # search with the year
-            series_year = '%s (%d)' % (series_fix, year)
-            if series_year in show_ids:
-                show_id = show_ids[series_year]
-            else:
-                show_id = self.find_show_id(series_fix, year)
-            series_searched = series_year
-        if show_id is None:  # search without the year
-            year = None
+            sub_year = year
+            # before appending year, remove existing (...) , eg. (US)
+            series_fix = rm_par(series.lower()) + ' (%d)' % year
+            series_clean = clean_series(series_fix)
+            logger.debug('Looking up series "%s" or "%s"', series_fix, series_clean)
             if series_fix in show_ids:
                 show_id = show_ids[series_fix]
-            else:
+                sub_series = series_fix
+            elif series_clean in show_ids:
+                show_id = show_ids[series_clean]
+                sub_series = series_clean
+            else:  # fallback to searching addic7ed server
                 show_id = self.find_show_id(series_fix)
-            series_searched = series_fix
+                sub_series = series_fix
+                if show_id is None:  
+                    show_id = self.find_show_id(series_clean)
+                    sub_series = series_clean
+        if show_id is None:  # if found nothing, try without year
+            sub_year = None
+            series_fix = series.lower()
+            series_clean = clean_series(series_fix)
+            logger.debug('Looking up series "%s" or "%s"', series_fix, series_clean)
+            if series_fix in show_ids:
+                show_id = show_ids[series_fix]
+                sub_series = series_fix
+            elif series_clean in show_ids:
+                show_id = show_ids[series_clean]
+                sub_series = series_clean
+            else:  # fallback to searching addic7ed server
+                show_id = self.find_show_id(series_fix)
+                sub_series = series_fix
+                if show_id is None:  
+                    show_id = self.find_show_id(series_clean)
+                    sub_series = series_clean
+        if show_id is None:  # if found nothing, try removing (...) 
+            series_fix = rm_par(series.lower())
+            if series_fix == series.lower(): # give up if no (...) in series
+                return []
+            series_clean = clean_series(series_fix)
+            logger.debug('Looking up series "%s" or "%s"', series_fix, series_clean)
+            if series_fix in show_ids:
+                show_id = show_ids[series_fix]
+                sub_series = series_fix
+            elif series_clean in show_ids:
+                show_id = show_ids[series_clean]
+                sub_series = series_clean
+            else:  # fallback to searching addic7ed server
+                show_id = self.find_show_id(series_fix)
+                sub_series = series_fix
+                if show_id is None:  
+                    show_id = self.find_show_id(series_clean)
+                    sub_series = series_clean
         if show_id is None:
             return []
         params = {'show_id': show_id, 'season': season}
-        logger.debug('Searching subtitles for "%s" with %r', series_searched, params)
+        logger.debug('Searching subtitles for "%s" with %r', sub_series, params)
         link = '/show/{show_id}&season={season}'.format(**params)
         soup = self.get(link)
         subtitles = []
+        iii = 0
         for row in soup('tr', class_='epeven completed'):
             cells = row('td')
-            if cells[5].string != 'Completed':
-                continue    # skip if subtitle file is not completed
-            if not cells[3].string:
+            sub_status = cells[5].string
+            if sub_status != 'Completed':
+                continue    # skip if subtitle is not complete on server
+            sub_language_str = cells[3].string
+            if sub_language_str is not None and sub_language_str != "":
+                sub_language = babelfish.Language.fromaddic7ed(sub_language_str)
+            else:
                 continue    # skip if no language
+            sub_season_str = cells[0].string
+            sub_episode_str = cells[1].string
+            if sub_season_str is not None and sub_episode_str is not None:
+                sub_season = int(sub_season_str)
+                sub_episode = int(sub_episode_str)
+            else:
+                continue    # skip unless we have season and episode 
+            if sub_episode != episode or sub_language not in languages:
+                continue    # skip if wrong episode or unwanted language
+            sub_title = cells[2].string
+            sub_version = cells[4].string
+            sub_hearing_impaired = bool(cells[6].string)
+            sub_download_link = cells[9].a['href']
+            sub_page_link = self.server + cells[2].a['href']
+            iii += 1
+            logger.debug('addic7ed #%d: %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s',
+                iii, sub_season_str, sub_episode_str, sub_title, sub_language_str,
+                sub_version, sub_status, sub_hearing_impaired, bool(cells[7].string),
+                bool(cells[8].string), sub_download_link, cells[10].string, sub_page_link
+                )
             subtitles.append(Addic7edSubtitle(
-                babelfish.Language.fromaddic7ed(cells[3].string),  # language
-                series_searched,        # series
-                int(cells[0].string),   # season
-                int(cells[1].string),   # episode
-                cells[2].string,        # title
-                year,                   # year
-                cells[4].string,        # version
-                bool(cells[6].string),  # hearing_impaired
-                cells[9].a['href'],     # download_link
-                self.server + cells[2].a['href'] )  # page link
+                sub_language, sub_series, sub_season, sub_episode, sub_title, sub_year,
+                sub_version, sub_hearing_impaired, sub_download_link, sub_page_link)
                 )
         return subtitles
 
     def list_subtitles(self, video, languages):
         logger.debug('Listing subtitles for video %r; languages %r', video, languages)
-        return [s for s in self.query(video.series, video.season, video.year)
-                if s.language in languages and s.episode == video.episode]
+        return [s for s in self.query(languages, video.series, video.season, video.episode, video.year)]
 
     def download_subtitle(self, subtitle):
         r = self.session.get(self.server + subtitle.download_link, timeout=10, headers={'Referer': subtitle.page_link})
@@ -225,3 +279,16 @@ class Addic7edProvider(Provider):
         if r.headers['Content-Type'] == 'text/html':
             raise DownloadLimitExceeded
         subtitle.content = fix_line_endings(r.content)
+
+def clean_series(series_str):
+    """Clean series name of some symbol characters, multiple spaces, 
+    convert non-ASCII characters, and make lowercase
+    """
+    # convert non-ASCII characters to closest ASCII equivalents
+    filtered_str = unicode(unicodedata.normalize('NFKD', series_str).encode('ascii','ignore'))
+    return re.sub('[ ]{2,}', ' ',                     # compress multiple spaces to one space 
+               re.sub(r"[?!.',/:-]+", '',             # remove ?!.',/:- chars ('-' last in [])
+                   re.sub('&', 'and', filtered_str)   # replace '&' with 'and'
+               )
+           ).lower() 
+
