@@ -254,13 +254,15 @@ class Addic7edProvider(Provider):
             sub_title = cells[2].string
             sub_version = cells[4].string
             sub_hearing_impaired = bool(cells[6].string)
+            sub_corrected = bool(cells[7].string)
+            sub_hd = bool(cells[8].string)
             sub_download_link = cells[9].a['href']
             sub_page_link = self.server + cells[2].a['href']
             iii += 1
-            logger.debug('addic7ed #%d: %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s',
+            logger.debug('addic7ed #%d: %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s',
                 iii, sub_season_str, sub_episode_str, sub_title, sub_language_str,
-                sub_version, sub_status, sub_hearing_impaired, bool(cells[7].string),
-                bool(cells[8].string), sub_download_link, cells[10].string, sub_page_link
+                sub_version, sub_status, sub_hearing_impaired, sub_corrected,
+                sub_hd, sub_download_link, sub_page_link
                 )
             subtitles.append(Addic7edSubtitle(
                 sub_language, sub_series, sub_season, sub_episode, sub_title, sub_year,
